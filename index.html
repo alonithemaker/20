@@ -1,0 +1,1203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Count the hours you put into a skill.">
+<meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Twenty">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<title>Twenty Hours</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@400;500;600&display=swap">
+<style>
+/* ============ semantic tokens: HIG structure, amber as the system tint ============ */
+:root{
+  --bg:#F2F2F7;
+  --surface:#FFFFFF;
+  --surface-2:#FFFFFF;
+  --fill:rgba(120,120,128,.12);
+  --fill-2:rgba(120,120,128,.08);
+  --sep:rgba(60,60,67,.13);
+  --label:#1C1C1E;
+  --label-2:rgba(60,60,67,.62);
+  --label-3:rgba(60,60,67,.32);
+  --tint:#A96409;
+  --tint-strong:#8C5207;
+  --tint-soft:rgba(169,100,9,.11);
+  --on-tint:#FFFFFF;
+  --danger:#C0392B;
+  --shadow:0 1px 2px rgba(0,0,0,.04), 0 10px 28px rgba(30,20,5,.07);
+  --shadow-lift:0 2px 6px rgba(0,0,0,.05), 0 18px 44px rgba(30,20,5,.10);
+  --r-card:20px;
+  --r-btn:12px;
+  --ui:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --num:"Azeret Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#000000;
+    --surface:#1C1C1E;
+    --surface-2:#2C2C2E;
+    --fill:rgba(118,118,128,.24);
+    --fill-2:rgba(118,118,128,.16);
+    --sep:rgba(84,84,88,.58);
+    --label:#FFFFFF;
+    --label-2:rgba(235,235,245,.62);
+    --label-3:rgba(235,235,245,.32);
+    --tint:#F0A63C;
+    --tint-strong:#FFB855;
+    --tint-soft:rgba(240,166,60,.16);
+    --on-tint:#1A1206;
+    --danger:#FF6961;
+    --shadow:none;
+    --shadow-lift:none;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#000000; --surface:#1C1C1E; --surface-2:#2C2C2E;
+  --fill:rgba(118,118,128,.24); --fill-2:rgba(118,118,128,.16);
+  --sep:rgba(84,84,88,.58);
+  --label:#FFFFFF; --label-2:rgba(235,235,245,.62); --label-3:rgba(235,235,245,.32);
+  --tint:#F0A63C; --tint-strong:#FFB855; --tint-soft:rgba(240,166,60,.16); --on-tint:#1A1206;
+  --danger:#FF6961; --shadow:none; --shadow-lift:none;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html,body{-webkit-text-size-adjust:100%;overscroll-behavior:none}
+body{
+  margin:0; background:var(--bg); color:var(--label);
+  font-family:var(--ui); font-size:17px; line-height:1.45;
+  letter-spacing:-.01em;
+  display:flex; align-items:flex-start; justify-content:center;
+  min-height:100vh;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-font-smoothing:antialiased;
+}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;letter-spacing:inherit;
+  touch-action:manipulation;-webkit-user-select:none;user-select:none}
+input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2.5px solid var(--tint);outline-offset:2px;border-radius:8px}
+
+.device{
+  width:100%; max-width:430px; height:100vh; height:100dvh;
+  background:var(--bg); position:relative; overflow:hidden;
+  display:flex; flex-direction:column;
+}
+@media (min-width:520px){
+  body{padding:26px 16px;align-items:center;
+    background:radial-gradient(120% 70% at 50% 0%, var(--tint-soft) 0%, var(--bg) 55%);}
+  .device{height:calc(100vh - 52px);max-height:900px;border-radius:38px;
+    box-shadow:var(--shadow-lift);border:1px solid var(--sep)}
+}
+
+/* squircles where the browser can draw them, generous radii everywhere else */
+@supports (corner-shape: superellipse(3)){
+  .group,.hero,.btn,.pill,.sheet,.rowbtn,.picker button,.field input,.field textarea,.chip{
+    corner-shape:superellipse(3);
+  }
+}
+
+/* ============ icons (geometry from Lucide — ISC/MIT, Lucide Contributors) ============ */
+.ic{width:22px;height:22px;flex:none;stroke:currentColor;fill:none;
+  stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+.ic.sm{width:18px;height:18px;stroke-width:2.1}
+.ic.lg{width:30px;height:30px}
+.ic.solid{fill:currentColor;stroke:none}
+
+/* ============ navigation bar ============ */
+.nav{display:flex;align-items:center;gap:8px;min-height:52px;
+  padding:calc(14px + env(safe-area-inset-top)) 16px 6px}
+.nav .grow{flex:1}
+.navbtn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+  color:var(--tint);background:var(--fill-2)}
+.navbtn:active{background:var(--fill)}
+.backbtn{display:flex;align-items:center;gap:2px;color:var(--tint);
+  padding:7px 12px 7px 6px;border-radius:999px;font-size:17px;margin-left:-4px}
+.backbtn:active{opacity:.55}
+.largetitle{font-size:34px;line-height:1.12;font-weight:700;letter-spacing:-.028em;
+  margin:0;padding:2px 16px 14px}
+.navtitle{font-size:17px;font-weight:600;letter-spacing:-.015em}
+
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;padding-bottom:calc(40px + env(safe-area-inset-bottom))}
+#view{flex:1;display:flex;flex-direction:column;min-height:0}
+
+/* ============ grouped inset lists ============ */
+.grouphdr{font-size:13px;font-weight:600;letter-spacing:.01em;color:var(--label-2);
+  padding:22px 32px 8px;text-transform:none}
+.group{background:var(--surface);border-radius:var(--r-card);margin:0 16px;
+  box-shadow:var(--shadow);overflow:hidden}
+.group + .rowbtn{margin-top:14px}
+
+.row{position:relative;display:flex;align-items:stretch}
+.row + .row::before{content:"";position:absolute;top:0;left:18px;right:0;height:1px;background:var(--sep)}
+.rowmain{flex:1;min-width:0;text-align:left;padding:15px 6px 15px 18px;
+  display:flex;flex-direction:column;gap:9px}
+.rowmain:active{background:var(--fill-2)}
+.rowtop{display:flex;align-items:baseline;gap:12px}
+.rowname{font-size:17px;font-weight:600;letter-spacing:-.018em;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.rowhrs{margin-left:auto;font-family:var(--num);font-size:15px;font-weight:500;
+  font-variant-numeric:tabular-nums;letter-spacing:-.04em;flex:none}
+.bar{height:4px;border-radius:3px;background:var(--fill);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:3px;background:var(--tint);
+  transition:width .55s cubic-bezier(.2,.8,.2,1)}
+.rowsub{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--label-2);
+  font-variant-numeric:tabular-nums}
+.rowsub .goal{margin-left:auto;color:var(--label-3);flex:none}
+.rowcue{display:flex;gap:7px;align-items:flex-start;font-size:13px;color:var(--label-2);line-height:1.4}
+.rowcue .ic{color:var(--tint);margin-top:1px}
+.rowdisc{width:42px;display:grid;place-items:center;color:var(--label-3)}
+.rowdisc:active{background:var(--fill-2)}
+.row.is-running .rowname{color:var(--tint)}
+.running{display:flex;align-items:center;gap:7px;color:var(--tint);font-weight:500}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--tint);
+  animation:breathe 2.4s ease-in-out infinite}
+@keyframes breathe{0%,100%{opacity:.28;transform:scale(.78)}50%{opacity:1;transform:scale(1)}}
+
+.rowbtn{display:flex;align-items:center;gap:10px;width:calc(100% - 32px);margin:0 16px;
+  padding:16px 18px;background:var(--surface);border-radius:var(--r-card);
+  box-shadow:var(--shadow);color:var(--tint);font-size:17px;text-align:left}
+.rowbtn:active{background:var(--fill-2)}
+
+/* ============ hero ============ */
+.hero{margin:0 16px;padding:20px 20px 18px;background:var(--surface);
+  border-radius:var(--r-card);box-shadow:var(--shadow)}
+.hero-num{font-family:var(--num);font-size:38px;font-weight:500;letter-spacing:-.055em;
+  font-variant-numeric:tabular-nums;line-height:1}
+.hero-lbl{font-size:13px;color:var(--label-2);margin-top:7px}
+
+.notice{margin:14px 16px 0;padding:12px 16px;border-radius:14px;background:var(--tint-soft);
+  color:var(--tint);font-size:13px;display:flex;align-items:center;gap:10px}
+.notice button{margin-left:auto;font-size:13px;font-weight:600;color:inherit;flex:none}
+
+/* ============ centred screens: ready & running ============ */
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:20px 28px calc(44px + env(safe-area-inset-bottom));text-align:center;overflow-y:auto}
+.stage .who{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--label-2)}
+.stage .big{font-family:var(--num);font-variant-numeric:tabular-nums;
+  font-size:clamp(46px,15vw,60px);font-weight:400;letter-spacing:-.06em;line-height:1;margin:14px 0 2px}
+.stage .big .u{font-size:.4em;color:var(--label-3);margin:0 .2em 0 .06em;letter-spacing:-.02em}
+.stage .sub{font-size:13px;color:var(--label-2);margin-top:6px;font-variant-numeric:tabular-nums}
+.stage .sub b{color:var(--tint);font-weight:600}
+.stage .live{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--label-2);margin-top:10px}
+.pickup{margin-top:26px;max-width:300px;text-align:left;background:var(--surface);
+  border-radius:16px;padding:14px 16px;box-shadow:var(--shadow)}
+.pickup b{display:block;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--tint);margin-bottom:5px}
+.pickup span{font-size:15px;color:var(--label);line-height:1.45}
+
+.orb{width:168px;height:168px;border-radius:50%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
+  margin-top:34px;transition:transform .16s cubic-bezier(.3,.9,.4,1), box-shadow .25s ease}
+.orb .lbl{font-size:15px;font-weight:600;letter-spacing:.01em}
+.orb:active{transform:scale(.955)}
+.orb.start{background:var(--tint);color:var(--on-tint);box-shadow:0 0 0 6px var(--tint-soft)}
+.orb.start:hover{box-shadow:0 0 0 11px var(--tint-soft)}
+.orb.stop{background:var(--surface);color:var(--label);box-shadow:var(--shadow),inset 0 0 0 2px var(--tint-soft)}
+.orb.stop:hover{box-shadow:var(--shadow),inset 0 0 0 3px var(--tint)}
+.footnote{margin-top:26px;font-size:12px;color:var(--label-3);max-width:290px;line-height:1.5}
+
+/* ============ topic ============ */
+.summary{display:flex;gap:20px;align-items:center;padding:2px 20px 20px}
+.sum-num{font-family:var(--num);font-size:32px;font-weight:500;letter-spacing:-.055em;
+  font-variant-numeric:tabular-nums;line-height:1.05}
+.sum-sub{font-size:13px;color:var(--label-2);margin-top:8px;line-height:1.55}
+.sum-sub b{color:var(--tint);font-weight:600}
+
+.chips{display:flex;gap:9px;padding:0 16px 4px;flex-wrap:wrap}
+.chip{padding:10px 16px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow);
+  font-size:15px;font-weight:500;color:var(--tint)}
+.chip:active{background:var(--fill-2)}
+
+.cell{padding:15px 18px;position:relative}
+.cell + .cell::before{content:"";position:absolute;top:0;left:18px;right:0;height:1px;background:var(--sep)}
+.cell .cl{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--label-3);margin-bottom:7px}
+.cell .ct{font-size:15px;line-height:1.5}
+.cell .ct.dim{color:var(--label-2);font-size:14px}
+.cell .ca{margin-top:11px;font-size:15px;color:var(--tint);font-weight:500}
+
+.bars{display:flex;height:10px;border-radius:6px;overflow:hidden;background:var(--fill);margin-bottom:15px}
+.bars i{display:block;height:100%}
+.plist{display:flex;flex-direction:column;gap:11px}
+.prow{display:flex;align-items:center;gap:11px;font-size:15px}
+.sw{width:10px;height:10px;border-radius:3px;flex:none}
+.prow .pn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prow .ph{margin-left:auto;font-family:var(--num);font-size:13px;font-weight:500;
+  font-variant-numeric:tabular-nums;letter-spacing:-.04em;color:var(--label-2);flex:none}
+
+.logrow{display:flex;align-items:flex-start;gap:12px;padding:14px 18px;position:relative}
+.logrow + .logrow::before{content:"";position:absolute;top:0;left:18px;right:0;height:1px;background:var(--sep)}
+.logrow .lm{flex:1;min-width:0}
+.l1{display:flex;align-items:baseline;gap:10px;font-size:15px}
+.l1 .d{font-weight:500}
+.l1 .t{color:var(--label-3);font-size:13px}
+.l1 .len{margin-left:auto;font-family:var(--num);font-size:14px;font-weight:500;
+  font-variant-numeric:tabular-nums;letter-spacing:-.04em;flex:none}
+.l2{font-size:13px;color:var(--label-2);margin-top:4px;line-height:1.4}
+.l2 .pt{color:var(--tint);font-weight:500}
+.delx{color:var(--label-3);padding:2px;margin-top:1px}
+.delx:active{color:var(--danger)}
+
+.chk{padding:16px 18px;position:relative}
+.chk + .chk::before{content:"";position:absolute;top:0;left:18px;right:0;height:1px;background:var(--sep)}
+.chk .ch{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.chk .cm{font-family:var(--num);color:var(--tint);font-size:15px;font-weight:600;letter-spacing:-.04em}
+.chk .cd{font-size:13px;color:var(--label-3);margin-left:auto}
+.chk dl{margin:0}
+.chk dt{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--label-3);margin-top:10px}
+.chk dd{margin:3px 0 0;font-size:15px;color:var(--label-2);line-height:1.45}
+.chk dd.act{color:var(--label)}
+
+.empty{padding:26px 18px;color:var(--label-3);font-size:15px;text-align:center;line-height:1.55}
+.teach{padding:20px 20px 22px}
+.teach p{margin:0 0 12px;font-size:15px;line-height:1.5;color:var(--label-2)}
+.teach p:last-child{margin-bottom:0}
+.teach b{color:var(--label);font-weight:600}
+
+/* ============ first run ============ */
+.intro{flex:1;display:flex;flex-direction:column;justify-content:center;
+  padding:32px 26px calc(34px + env(safe-area-inset-bottom));overflow-y:auto}
+.intro .mark{font-family:var(--num);font-size:52px;font-weight:500;letter-spacing:-.08em;
+  color:var(--tint);line-height:1;margin-bottom:26px}
+.intro h1{font-size:32px;font-weight:700;letter-spacing:-.03em;line-height:1.15;margin:0 0 26px}
+.points{list-style:none;margin:0 0 34px;padding:0;display:flex;flex-direction:column;gap:17px}
+.points li{font-size:15px;line-height:1.5;color:var(--label-2);padding-left:16px;position:relative}
+.points li::before{content:"";position:absolute;left:0;top:9px;width:5px;height:5px;
+  border-radius:50%;background:var(--tint)}
+.points b{color:var(--label);font-weight:600}
+.intro .fine{font-size:12px;color:var(--label-3);margin:22px 4px 0;line-height:1.5;text-align:center}
+
+/* ============ sheets ============ */
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.42);opacity:0;pointer-events:none;
+  transition:opacity .28s ease;z-index:20}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:21;background:var(--bg);
+  border-radius:26px 26px 0 0;max-height:92%;overflow-y:auto;overscroll-behavior:contain;
+  padding:10px 16px calc(28px + env(safe-area-inset-bottom));
+  transform:translateY(102%);transition:transform .38s cubic-bezier(.32,.72,0,1);
+  box-shadow:0 -8px 40px rgba(0,0,0,.16)}
+.sheet.on{transform:translateY(0)}
+.grab{width:36px;height:5px;border-radius:3px;background:var(--fill);margin:0 auto 18px}
+.sheet h3{font-size:22px;font-weight:700;letter-spacing:-.022em;margin:0 4px 6px;line-height:1.25}
+.sheet .hint{font-size:14px;color:var(--label-2);margin:0 4px 20px;line-height:1.5}
+.sheet .recall{font-size:14px;color:var(--label);line-height:1.5;background:var(--tint-soft);
+  border-radius:14px;padding:13px 16px;margin:0 0 20px}
+.sheet .recall b{display:block;font-size:11px;font-weight:600;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--tint);margin-bottom:5px}
+
+.menu{background:var(--surface);border-radius:var(--r-card);overflow:hidden;box-shadow:var(--shadow)}
+.menu button{display:flex;align-items:center;gap:14px;width:100%;padding:15px 18px;text-align:left;
+  position:relative;font-size:17px}
+.menu button + button::before{content:"";position:absolute;top:0;left:52px;right:0;height:1px;background:var(--sep)}
+.menu .ic{color:var(--tint)}
+.menu .sub{display:block;font-size:13px;color:var(--label-2);margin-top:2px;line-height:1.35}
+.menu button:active{background:var(--fill-2)}
+.menu button.warn,.menu button.warn .ic{color:var(--danger)}
+
+.field{margin-bottom:18px}
+.field label{display:block;font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--label-3);margin:0 4px 8px}
+.field .lh{display:block;font-size:13px;color:var(--label-2);margin:-4px 4px 8px;
+  text-transform:none;letter-spacing:0;font-weight:400;line-height:1.4}
+.field input,.field textarea{width:100%;background:var(--surface);border:none;border-radius:14px;
+  padding:15px 16px;font-size:17px;box-shadow:var(--shadow);resize:vertical}
+.field textarea{min-height:84px;line-height:1.5;font-size:16px}
+.field input[type=time],.field input[type=number]{font-family:var(--num);letter-spacing:-.03em}
+.two{display:flex;gap:12px}
+.two .field{flex:1}
+
+.stepper{display:flex;align-items:center;gap:12px}
+.stepper button{width:52px;height:52px;border-radius:50%;background:var(--surface);
+  box-shadow:var(--shadow);color:var(--tint);display:grid;place-items:center;flex:none}
+.stepper button:active{background:var(--fill-2)}
+.stepper .val{flex:1;text-align:center;font-family:var(--num);font-size:22px;font-weight:500;
+  font-variant-numeric:tabular-nums;letter-spacing:-.05em}
+
+.picker{display:flex;flex-wrap:wrap;gap:9px}
+.picker button{padding:11px 16px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow);
+  font-size:15px;color:var(--label-2)}
+.picker button.on{background:var(--tint);color:var(--on-tint);font-weight:600;box-shadow:none}
+
+.btn{display:block;width:100%;padding:16px;border-radius:14px;background:var(--tint);
+  color:var(--on-tint);font-size:17px;font-weight:600;margin-top:8px;letter-spacing:-.01em}
+.btn:active{background:var(--tint-strong)}
+.btn.quiet{background:transparent;color:var(--label-2);font-weight:400;box-shadow:none;margin-top:4px}
+.btn.quiet:active{color:var(--label)}
+
+/* ============ milestone ============ */
+.celebrate{position:absolute;inset:0;z-index:40;display:none;flex-direction:column;
+  align-items:center;justify-content:center;background:var(--bg);text-align:center;padding:32px}
+.celebrate.on{display:flex}
+/* the dial closes once around the number — one gesture, then stillness */
+.cel-dial{position:relative;width:188px;height:188px;display:grid;place-items:center}
+.cel-dial svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.cel-dial circle{fill:none;stroke:var(--tint);stroke-width:2.5;stroke-linecap:round;
+  stroke-dasharray:548;stroke-dashoffset:548}
+@keyframes draw{to{stroke-dashoffset:0}}
+.cel-num{font-family:var(--num);font-size:70px;font-weight:500;letter-spacing:-.08em;line-height:1;
+  color:var(--tint)}
+.cel-word{font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--label-2);margin-top:22px}
+.cel-line{font-size:17px;color:var(--label);margin-top:26px;max-width:290px;line-height:1.5}
+.cel-acts{margin-top:38px;width:236px}
+/* scoped to .on so every milestone replays the sequence, not just the first */
+.celebrate.on .cel-dial circle{animation:draw 1.15s .12s cubic-bezier(.25,.85,.3,1) forwards}
+.celebrate.on .cel-num{animation:rise .75s cubic-bezier(.2,.9,.25,1) both}
+.celebrate.on .cel-word{animation:rise .75s .09s cubic-bezier(.2,.9,.25,1) both}
+.celebrate.on .cel-line{animation:rise .75s .18s cubic-bezier(.2,.9,.25,1) both}
+.celebrate.on .cel-acts{animation:rise .75s .4s cubic-bezier(.2,.9,.25,1) both}
+.cel-acts .btn{margin-top:0}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+.toast{position:absolute;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));
+  transform:translate(-50%,18px);
+  background:var(--surface);color:var(--label);padding:13px 20px;border-radius:16px;
+  font-size:15px;z-index:50;opacity:0;pointer-events:none;max-width:84%;text-align:center;
+  transition:opacity .22s ease,transform .22s ease;box-shadow:var(--shadow-lift),0 0 0 1px var(--sep)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.01ms !important;animation-iteration-count:1 !important;
+    transition-duration:.01ms !important}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.1"/><circle cx="19" cy="12" r="1.1"/><circle cx="5" cy="12" r="1.1"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><path d="M21 4h-7"/><path d="M10 4H3"/><path d="M21 12h-9"/><path d="M8 12H3"/><path d="M21 20h-5"/><path d="M12 20H3"/><path d="M14 2v4"/><path d="M8 10v4"/><path d="M16 18v4"/></symbol>
+  <symbol id="i-cue" viewBox="0 0 24 24"><path d="m15 10 5 5-5 5"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></symbol>
+  <symbol id="i-scissors" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8 20 20"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><rect width="7" height="7" x="3" y="3" rx="1.5"/><rect width="7" height="7" x="3" y="14" rx="1.5"/><path d="M14 4.5h7"/><path d="M14 9h7"/><path d="M14 15.5h7"/><path d="M14 20h7"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></symbol>
+  <symbol id="i-square" viewBox="0 0 24 24"><rect width="14" height="14" x="5" y="5" rx="2.5"/></symbol>
+</defs></svg>
+
+<div class="device" id="app">
+  <div id="view"></div>
+  <div class="scrim" id="scrim"></div>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
+  <div class="celebrate" id="celebrate">
+    <div class="cel-dial">
+      <svg viewBox="0 0 188 188" aria-hidden="true"><circle cx="94" cy="94" r="87"/></svg>
+      <div class="cel-num" id="celNum">10</div>
+    </div>
+    <div class="cel-word" id="celWord">hours</div>
+    <div class="cel-line" id="celLine"></div>
+    <div class="cel-acts" id="celActs"></div>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var MS_H = 3600000, MS_M = 60000, KEY = "twentyhours.v2";
+  var TINTS = [1, .72, .52, .36, .25];
+
+  function rid(){ return Math.random().toString(36).slice(2,10); }
+  function ic(n, cls){ return '<svg class="ic'+(cls?" "+cls:"")+'"><use href="#i-'+n+'"/></svg>'; }
+
+  /* ---------------- demo state ---------------- */
+  function demo(){
+    var now = Date.now(), day = 86400000;
+    function sess(daysAgo, hour, minutes, partId, next){
+      var d = new Date(now - daysAgo*day); d.setHours(hour,0,0,0);
+      return {id:rid(), start:d.getTime(), end:d.getTime()+minutes*MS_M, part:partId||null, next:next||""};
+    }
+    var pA=[{id:"p1",name:"Problem sets"},{id:"p2",name:"Lectures"},{id:"p3",name:"Derivations"}];
+    var pB=[{id:"q1",name:"Right-hand technique"},{id:"q2",name:"Maqamat"},{id:"q3",name:"Repertoire"}];
+    return {
+      skills:[
+        {id:rid(), name:"Physics 1", goal:20, created:now-40*day, parts:pA,
+         cue:"After dinner on weekdays, at the desk.",
+         next:"Chapter 4, problem 12 — the inclined plane one.",
+         reviews:[{id:rid(), at:now-9*day, milestone:10,
+           easier:"Free-body diagrams. I draw them without thinking now.",
+           stuck:"Anything with friction on a slope.",
+           change:"Stop re-reading the chapter. Go straight to problems and look things up when stuck."}],
+         sessions:[
+          sess(1,19,95,"p1","Chapter 4, problem 12 — the inclined plane one."),
+          sess(2,17,140,"p1"), sess(4,20,75,"p3"), sess(6,16,110,"p2"),
+          sess(8,18,130,"p1"), sess(11,20,85,"p2"), sess(14,17,105,"p3")]},
+        {id:rid(), name:"Oud", goal:20, created:now-30*day, parts:pB,
+         cue:"", next:"Slow the Rast exercise down to 60 bpm.", reviews:[],
+         sessions:[ sess(1,21,45,"q3","Slow the Rast exercise down to 60 bpm."),
+          sess(3,21,55,"q3"), sess(5,22,40,"q1"), sess(9,21,60,"q3"), sess(13,20,50,"q2")]},
+        {id:rid(), name:"Running", goal:50, created:now-120*day, parts:[],
+         cue:"Shoes by the door the night before.", next:"", reviews:[],
+         sessions:[{id:rid(), start:now-140*day, end:now-140*day+17*MS_H},
+          sess(2,7,52), sess(5,7,48), sess(7,7,65), sess(10,7,44)]}
+      ],
+      active:null, seeded:true
+    };
+  }
+
+  var S;
+  try{ S = JSON.parse(localStorage.getItem(KEY)); }catch(e){ S = null; }
+  /* a first-time visitor starts empty and gets told what this is — never with someone else's data */
+  if(!S || !S.skills) S = {skills:[], active:null, introSeen:false};
+  S.skills.forEach(function(sk){
+    sk.parts = sk.parts || []; sk.reviews = sk.reviews || [];
+    sk.cue = sk.cue || ""; sk.next = sk.next || "";
+  });
+  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+  save();
+
+  /* ---------------- time ---------------- */
+  function skillMs(sk){
+    var t=0; for(var i=0;i<sk.sessions.length;i++) t += sk.sessions[i].end - sk.sessions[i].start;
+    if(S.active && S.active.skillId === sk.id) t += activeMs();
+    return t;
+  }
+  function partMs(sk, pid){
+    var t=0; for(var i=0;i<sk.sessions.length;i++){
+      var s=sk.sessions[i];
+      if(pid === null ? !s.part : s.part === pid) t += s.end - s.start;
+    } return t;
+  }
+  function activeMs(){ return Math.max(0, Date.now() - S.active.start); }
+  function totalMs(){ var t=0; S.skills.forEach(function(s){ t += skillMs(s); }); return t; }
+  function hm(ms){ var m=Math.floor(ms/MS_M); return {h:Math.floor(m/60), m:m%60}; }
+  function fmt(ms){ var v=hm(ms); return v.h+"h "+String(v.m).padStart(2,"0")+"m"; }
+  function hoursOf(ms){ return ms/MS_H; }
+
+  function dayLabel(ts){
+    var d=new Date(ts), n=new Date();
+    var diff = Math.round((new Date(n.getFullYear(),n.getMonth(),n.getDate())
+      - new Date(d.getFullYear(),d.getMonth(),d.getDate()))/86400000);
+    if(diff===0) return "Today";
+    if(diff===1) return "Yesterday";
+    if(diff<7) return d.toLocaleDateString("en-US",{weekday:"long"});
+    return d.toLocaleDateString("en-US",{month:"short",day:"numeric"});
+  }
+  function clockLabel(ts){ return new Date(ts).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"}); }
+  function timeInputValue(ts){ var d=new Date(ts);
+    return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+
+  /* ---------------- milestones: 1, 5, 10, then every 5 ---------------- */
+  function nextMilestone(h){
+    if(h<1) return 1; if(h<5) return 5; if(h<10) return 10;
+    return Math.floor(h/5)*5 + 5;
+  }
+  function crossed(b,a){ var out=[], m=nextMilestone(b);
+    while(m<=a && out.length<40){ out.push(m); m=nextMilestone(m); } return out; }
+  var CEL = {
+    1:"One hour in. The wall of not-knowing is already lower than it was.",
+    5:"Five hours. Past the part where everything felt clumsy.",
+    10:"Ten hours. Halfway to the twenty that Kaufman says it takes.",
+    20:"Twenty hours. You are no longer a beginner at this.",
+    50:"Fifty hours. This is a thing you do now, not a thing you tried.",
+    100:"One hundred hours. Very few people ever reach this on anything."
+  };
+  function celLine(m,name){ return CEL[m] || (m+" hours on "+name+". Every one of them was a choice."); }
+
+  /* ---------------- helpers ---------------- */
+  var route = {name:"home", id:null};
+  var pendingWrap = null, pendingCheck = null;
+  function el(id){ return document.getElementById(id); }
+  function esc(s){ return String(s||"").replace(/[&<>"]/g,function(c){
+    return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]; }); }
+  function findSkill(id){ for(var i=0;i<S.skills.length;i++) if(S.skills[i].id===id) return S.skills[i]; return null; }
+  function partName(sk,pid){ for(var i=0;i<sk.parts.length;i++) if(sk.parts[i].id===pid) return sk.parts[i].name; return null; }
+  function tint(i){ return "color-mix(in srgb, var(--tint) "+Math.round(TINTS[i%5]*100)+"%, transparent)"; }
+  function awayText(nm, h){
+    var away = Math.max(0, nm-h);
+    return away<1 ? Math.max(1,Math.round(away*60))+" min to "+nm+"h"
+                  : (Math.round(away*10)/10)+"h to "+nm+"h";
+  }
+
+  /* ---------------- first run ---------------- */
+  function introHTML(){
+    return '<div class="intro">'
+      + '<div class="mark">20</div>'
+      + '<h1>Count the hours,<br>not the days.</h1>'
+      + '<ol class="points">'
+      + '<li><b>Start the clock when you sit down.</b> Stop it when you get up. That is the whole interaction.</li>'
+      + '<li><b>The hours pile up per skill.</b> Twenty of them is roughly what it takes to stop being a '
+      + 'beginner at something — the idea comes from Josh Kaufman.</li>'
+      + '<li><b>Nothing here can be failed.</b> No streaks, no reminders, no guilt for a quiet week.</li>'
+      + '</ol>'
+      + '<button class="btn" data-introdone="1">Add your first skill</button>'
+      + '<button class="btn quiet" data-introskip="1">Look around first</button>'
+      + '<p class="fine">Everything stays in this browser, on this device. Nothing is sent anywhere.</p>'
+      + '</div>';
+  }
+
+  function render(){
+    if(route.name === "run" && !S.active) route.name = "home";
+    var v = el("view");
+    if(!S.introSeen && !S.skills.length){ v.innerHTML = introHTML(); bind(); return; }
+    if(route.name === "home") v.innerHTML = homeHTML();
+    else if(route.name === "run") v.innerHTML = runHTML();
+    else if(route.name === "ready") v.innerHTML = readyHTML(findSkill(route.id));
+    else v.innerHTML = topicHTML(findSkill(route.id));
+    bind();
+  }
+
+  /* ---------------- home ---------------- */
+  function homeHTML(){
+    var rows = S.skills.map(function(sk){
+      var live = !!(S.active && S.active.skillId === sk.id);
+      var ms=skillMs(sk), h=hoursOf(ms), pct=Math.min(100,(h/sk.goal)*100), nm=nextMilestone(h);
+      var status = live
+        ? '<span class="running"><span class="dot"></span>Running · '+fmt(activeMs())+'</span>'
+        : '<span>'+awayText(nm,h)+'</span>';
+      return '<div class="row'+(live?' is-running':'')+'">'
+        + '<button class="rowmain" data-'+(live?'resume':'ready')+'="'+sk.id+'" aria-label="'
+          + (live?'Open the running session on ':'Open ')+esc(sk.name)+'">'
+          + '<div class="rowtop"><span class="rowname">'+esc(sk.name)+'</span>'
+          + '<span class="rowhrs">'+fmt(ms)+'</span></div>'
+          + '<div class="bar"><i style="width:'+pct.toFixed(1)+'%"></i></div>'
+          + '<div class="rowsub">'+status+'<span class="goal">Goal '+sk.goal+'h</span></div>'
+          + (sk.cue && !live ? '<div class="rowcue">'+ic("cue","sm")+'<span>'+esc(sk.cue)+'</span></div>' : '')
+        + '</button>'
+        + '<button class="rowdisc" data-open="'+sk.id+'" aria-label="Details for '+esc(sk.name)+'">'
+        + ic("next","sm")+'</button></div>';
+    }).join("");
+
+    return '<div class="nav"><span class="grow"></span>'
+      + '<button class="navbtn" data-sheet="settings" aria-label="Settings">'+ic("settings","sm")+'</button></div>'
+      + '<h1 class="largetitle">Twenty</h1>'
+      + '<div class="scroll">'
+      + '<div class="hero"><div class="hero-num">'+fmt(totalMs())+'</div>'
+      + '<div class="hero-lbl">Logged across all skills</div></div>'
+      + (S.seeded ? '<div class="notice">Running on example data.'
+          + '<button data-clear="1">Start empty</button></div>' : '')
+      + '<div class="grouphdr">Skills</div>'
+      + (rows ? '<div class="group">'+rows+'</div>'
+              : '<div class="group"><div class="teach">'
+                + '<p><b>Nothing tracked yet.</b></p>'
+                + '<p>A skill is anything you want to get better at by putting hours into it — a course, '
+                + 'an instrument, a language, a training plan.</p>'
+                + '<p>Name it the way you would say it out loud. You can change everything later.</p>'
+                + '</div></div>')
+      + '<button class="rowbtn" data-sheet="newskill">'+ic("plus")+'New skill</button>'
+      + '</div>';
+  }
+
+  /* ---------------- ready ---------------- */
+  function readyHTML(sk){
+    if(!sk){ route={name:"home", id:null}; return homeHTML(); }
+    var total=skillMs(sk), h=hoursOf(total), nm=nextMilestone(h), away=Math.max(0,nm-h);
+    return '<div class="nav">'
+      + '<button class="backbtn" data-home="1">'+ic("back","sm")+'All skills</button>'
+      + '<span class="grow"></span>'
+      + '<button class="navbtn" data-open="'+sk.id+'" aria-label="Details">'+ic("more","sm")+'</button></div>'
+      + '<div class="stage"><div class="who">'+esc(sk.name)+'</div>'
+      + '<div class="big">'+fmt(total)+'</div>'
+      + '<div class="sub">'+(away<=0 ? 'Goal reached'
+          : 'Next milestone at <b>'+nm+'h</b> · '
+            + (away<1 ? Math.max(1,Math.round(away*60))+' min away' : (Math.round(away*10)/10)+'h away'))+'</div>'
+      + (sk.next ? '<div class="pickup"><b>Picking up</b><span>'+esc(sk.next)+'</span></div>' : '')
+      + '<button class="orb start" data-start="'+sk.id+'">'+ic("play","lg solid")
+      + '<span class="lbl">Start</span></button>'
+      + '<div class="footnote">The clock runs on timestamps. Closing the app changes nothing.</div></div>';
+  }
+
+  /* ---------------- running ---------------- */
+  function runHTML(){
+    var sk=findSkill(S.active.skillId), ms=activeMs(), v=hm(ms);
+    var total=skillMs(sk), h=hoursOf(total), nm=nextMilestone(h), away=Math.max(0,nm-h);
+    return '<div class="nav">'
+      + '<button class="backbtn" data-home="1">'+ic("back","sm")+'All skills</button>'
+      + '<span class="grow"></span>'
+      + '<button class="navbtn" data-sheet="runmenu" aria-label="Session options">'+ic("more","sm")+'</button></div>'
+      + '<div class="stage"><div class="who">'+esc(sk.name)+'</div>'
+      + '<div class="big">'+v.h+'<span class="u">h</span>'+String(v.m).padStart(2,"0")+'<span class="u">m</span></div>'
+      + '<div class="live"><span class="dot"></span>Started '+clockLabel(S.active.start)+'</div>'
+      + (sk.next ? '<div class="pickup"><b>Picking up</b><span>'+esc(sk.next)+'</span></div>' : '')
+      + '<button class="orb stop" data-stop="1">'+ic("square","lg")+'<span class="lbl">Stop</span></button>'
+      + '<div class="footnote">'+esc(sk.name)+' stands at '+fmt(total)+'. '
+      + (away<=0 ? 'Next milestone reached.' : 'Next milestone at '+nm+'h. Leaving this screen keeps the clock running.')
+      + '</div></div>';
+  }
+
+  /* ---------------- topic ---------------- */
+  function ringSVG(pct){
+    var r=38, c=2*Math.PI*r, off=c*(1-Math.min(1,pct/100));
+    return '<svg width="92" height="92" viewBox="0 0 92 92" aria-hidden="true" style="flex:none">'
+      + '<circle cx="46" cy="46" r="'+r+'" fill="none" stroke="var(--fill)" stroke-width="7"/>'
+      + '<circle cx="46" cy="46" r="'+r+'" fill="none" stroke="var(--tint)" stroke-width="7" stroke-linecap="round"'
+      + ' stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 46 46)"/></svg>';
+  }
+
+  function partsGroup(sk){
+    if(!sk.parts.length){
+      return '<div class="group"><div class="cell">'
+        + '<div class="ct dim">Kaufman\'s first step is to break a skill into pieces and practise the ones that '
+        + 'carry the most weight. Without it, the hours tell you how long — never on what.</div>'
+        + '<button class="ca" data-sheet="parts" data-sk="'+sk.id+'">Break it into parts</button></div></div>';
+    }
+    var total = skillMs(sk) || 1;
+    var bars = sk.parts.map(function(p,i){
+      return '<i style="width:'+((partMs(sk,p.id)/total)*100).toFixed(2)+'%;background:'+tint(i)+'"></i>';
+    }).join("");
+    var un = partMs(sk,null);
+    if(un>0) bars += '<i style="width:'+((un/total)*100).toFixed(2)+'%;background:var(--fill)"></i>';
+    var rows = sk.parts.map(function(p,i){
+      return '<div class="prow"><span class="sw" style="background:'+tint(i)+'"></span>'
+        + '<span class="pn">'+esc(p.name)+'</span>'
+        + '<span class="ph">'+fmt(partMs(sk,p.id))+'</span></div>';
+    }).join("");
+    if(un>0) rows += '<div class="prow"><span class="sw" style="background:var(--fill)"></span>'
+      + '<span class="pn" style="color:var(--label-3)">Unassigned</span>'
+      + '<span class="ph">'+fmt(un)+'</span></div>';
+    return '<div class="group"><div class="cell"><div class="bars">'+bars+'</div>'
+      + '<div class="plist">'+rows+'</div>'
+      + '<button class="ca" data-sheet="parts" data-sk="'+sk.id+'">Edit sub-skills</button></div></div>';
+  }
+
+  function topicHTML(sk){
+    if(!sk){ route.name="home"; return homeHTML(); }
+    var live = !!(S.active && S.active.skillId === sk.id);
+    var ms=skillMs(sk), h=hoursOf(ms), pct=Math.min(100,(h/sk.goal)*100), nm=nextMilestone(h);
+
+    var log = sk.sessions.slice().sort(function(a,b){ return b.start-a.start; }).map(function(x){
+      var pn = x.part ? partName(sk,x.part) : null, second = "";
+      if(pn) second += '<span class="pt">'+esc(pn)+'</span>';
+      if(x.next) second += (pn?' · ':'')+esc(x.next);
+      return '<div class="logrow"><div class="lm"><div class="l1">'
+        + '<span class="d">'+dayLabel(x.start)+'</span><span class="t">'+clockLabel(x.start)+'</span>'
+        + '<span class="len">'+fmt(x.end-x.start)+'</span></div>'
+        + (second ? '<div class="l2">'+second+'</div>' : '')
+        + '</div><button class="delx" data-delsession="'+x.id+'" data-sk="'+sk.id+'" '
+        + 'aria-label="Delete session">'+ic("close","sm")+'</button></div>';
+    }).join("");
+
+    var checks = sk.reviews.slice().sort(function(a,b){ return b.at-a.at; }).map(function(r){
+      return '<div class="chk"><div class="ch"><span class="cm">'+r.milestone+'h</span>'
+        + '<span class="cd">'+dayLabel(r.at)+'</span></div><dl>'
+        + (r.easier ? '<dt>Got easier</dt><dd>'+esc(r.easier)+'</dd>' : '')
+        + (r.stuck ? '<dt>Still hard</dt><dd>'+esc(r.stuck)+'</dd>' : '')
+        + (r.change ? '<dt>Doing differently</dt><dd class="act">'+esc(r.change)+'</dd>' : '')
+        + '</dl></div>';
+    }).join("");
+
+    return '<div class="nav">'
+      + '<button class="backbtn" data-home="1">'+ic("back","sm")+'All skills</button>'
+      + '<span class="grow"></span>'
+      + '<button class="navbtn" data-sheet="topicmenu" data-sk="'+sk.id+'" aria-label="Options">'
+      + ic("more","sm")+'</button></div>'
+      + '<h1 class="largetitle">'+esc(sk.name)+'</h1>'
+      + '<div class="scroll">'
+      + '<div class="summary">'+ringSVG(pct)
+      + '<div><div class="sum-num">'+fmt(ms)+'</div>'
+      + '<div class="sum-sub">'+Math.round(pct)+'% of a <b>'+sk.goal+'h</b> goal<br>'
+      + 'Next milestone <b>'+nm+'h</b></div></div></div>'
+      + '<div class="chips">'
+      + (live ? '<button class="chip" data-resume="'+sk.id+'">Open running session</button>'
+              : '<button class="chip" data-start="'+sk.id+'">Start a session</button>')
+      + '<button class="chip" data-sheet="addtime" data-sk="'+sk.id+'">Add time</button>'
+      + '<button class="chip" data-sheet="editgoal" data-sk="'+sk.id+'">Change goal</button></div>'
+
+      + '<div class="grouphdr">Where you left off</div><div class="group">'
+      + '<div class="cell"><div class="cl">Next time</div>'
+      + '<div class="ct'+(sk.next?'':' dim')+'">'+(sk.next ? esc(sk.next)
+          : 'Nothing noted. One line at the end of a session saves the ten minutes it takes to find your place again.')+'</div>'
+      + '<button class="ca" data-sheet="editnext" data-sk="'+sk.id+'">'+(sk.next?'Edit':'Write one')+'</button></div>'
+      + '<div class="cell"><div class="cl">When I do this</div>'
+      + '<div class="ct'+(sk.cue?'':' dim')+'">'+(sk.cue ? esc(sk.cue)
+          : 'A fixed cue — a time, a place, a thing that comes right before — makes starting a reflex instead of a decision.')+'</div>'
+      + '<button class="ca" data-sheet="editcue" data-sk="'+sk.id+'">'+(sk.cue?'Edit':'Set a cue')+'</button></div>'
+      + '</div>'
+
+      + '<div class="grouphdr">Where the hours went</div>' + partsGroup(sk)
+      + (checks ? '<div class="grouphdr">Checkpoints</div><div class="group">'+checks+'</div>' : '')
+      + '<div class="grouphdr">Sessions</div>'
+      + '<div class="group">'+(log || '<div class="empty">No sessions logged yet.</div>')+'</div>'
+      + '</div>';
+  }
+
+  /* ---------------- sheets ---------------- */
+  function openSheet(html){
+    el("sheet").innerHTML = '<div class="grab"></div>' + html;
+    el("sheet").classList.add("on"); el("scrim").classList.add("on");
+    bindCommon(el("sheet"));
+  }
+  function closeSheet(){ el("sheet").classList.remove("on"); el("scrim").classList.remove("on"); }
+
+  function sheetFor(kind, skId){
+    var sk = skId ? findSkill(skId) : null;
+
+    if(kind==="runmenu"){
+      return '<h3>This session</h3><p class="hint">Running for '+fmt(activeMs())
+        + ', started '+clockLabel(S.active.start)+'.</p><div class="menu">'
+        + '<button data-sheet="trim">'+ic("scissors")+'<span>Trim time off'
+        + '<span class="sub">Drop minutes you were away, keep counting from now</span></span></button>'
+        + '<button data-sheet="setstart">'+ic("clock")+'<span>Change start time'
+        + '<span class="sub">Currently '+clockLabel(S.active.start)+'</span></span></button>'
+        + '<button class="warn" data-discard="1">'+ic("trash")+'<span>Discard session'
+        + '<span class="sub">Nothing is added to the total</span></span></button></div>';
+    }
+
+    if(kind==="trim"){
+      return '<h3>Trim time off</h3><p class="hint">Removes the minutes from this session and keeps the '
+        + 'stopwatch running from now.</p><div class="field"><label>Minutes to remove</label>'
+        + '<div class="stepper"><button data-step="-15">'+ic("minus")+'</button>'
+        + '<span class="val" id="trimVal">15</span>'
+        + '<button data-step="15">'+ic("plus")+'</button></div></div>'
+        + '<button class="btn" data-trim="1">Trim and continue</button>'
+        + '<button class="btn quiet" data-close="1">Cancel</button>';
+    }
+
+    if(kind==="setstart"){
+      return '<h3>Change start time</h3><p class="hint">Set when this session actually began.</p>'
+        + '<div class="field"><label>Started at</label>'
+        + '<input type="time" id="startTime" value="'+timeInputValue(S.active.start)+'"></div>'
+        + '<button class="btn" data-setstart="1">Save</button>'
+        + '<button class="btn quiet" data-close="1">Cancel</button>';
+    }
+
+    if(kind==="wrapup"){
+      var w = pendingWrap, wsk = findSkill(w.skillId);
+      var picks = wsk.parts.length
+        ? '<div class="field"><label>What did you work on?</label><div class="picker">'
+          + wsk.parts.map(function(p){ return '<button data-pick="'+p.id+'">'+esc(p.name)+'</button>'; }).join("")
+          + '</div></div>' : '';
+      return '<h3>Logged '+fmt(w.ms)+' to '+esc(wsk.name)+'</h3>'
+        + '<p class="hint">Both fields are optional. A session without them counts exactly the same.</p>'
+        + picks
+        + '<div class="field"><label>Where do you pick up next time?</label>'
+        + '<span class="lh">You will see this line the moment you start the next session.</span>'
+        + '<input type="text" id="wrapNext" placeholder="e.g. chapter 4, problem 12" '
+        + 'value="'+esc(wsk.next)+'" autocomplete="off"></div>'
+        + '<button class="btn" data-wrapsave="1">Save</button>'
+        + '<button class="btn quiet" data-wrapskip="1">Skip</button>';
+    }
+
+    if(kind==="checkpoint"){
+      var c = pendingCheck, csk = findSkill(c.skillId);
+      var last = csk.reviews.length ? csk.reviews[csk.reviews.length-1] : null;
+      return '<h3>Checkpoint · '+c.milestone+' hours of '+esc(csk.name)+'</h3>'
+        + '<p class="hint">Three questions, once every few hours. Skip any of them.</p>'
+        + (last && last.change ? '<div class="recall"><b>At '+last.milestone+'h you said you would</b>'
+            + esc(last.change)+'</div>' : '')
+        + '<div class="field"><label>What got easier?</label>'
+        + '<textarea id="ckEasier" placeholder="Something you struggled with that you no longer think about"></textarea></div>'
+        + '<div class="field"><label>What is still hard?</label>'
+        + '<textarea id="ckStuck" placeholder="Be specific — vague answers are useless later"></textarea></div>'
+        + '<div class="field"><label>One thing you will do differently</label>'
+        + '<span class="lh">In the next stretch of hours. One thing, not a list.</span>'
+        + '<textarea id="ckChange" placeholder="e.g. start each session with the hard part, not the easy one"></textarea></div>'
+        + '<button class="btn" data-cksave="1">Save checkpoint</button>'
+        + '<button class="btn quiet" data-close="1">Not now</button>';
+    }
+
+    if(kind==="parts"){
+      return '<h3>Sub-skills of '+esc(sk.name)+'</h3>'
+        + '<p class="hint">Three to five pieces, one per line. Name them the way you would describe what you '
+        + 'actually do in a session — not the syllabus headings.</p>'
+        + '<div class="field"><label>One per line</label>'
+        + '<textarea id="partsV">'+esc(sk.parts.map(function(p){ return p.name; }).join("\n"))+'</textarea></div>'
+        + '<button class="btn" data-saveparts="'+sk.id+'">Save</button>'
+        + '<button class="btn quiet" data-close="1">Cancel</button>';
+    }
+
+    if(kind==="editnext"){
+      return '<h3>Where you pick up</h3>'
+        + '<p class="hint">Shown on screen the moment you start the next session on '+esc(sk.name)+'.</p>'
+        + '<div class="field"><label>Next time</label>'
+        + '<input type="text" id="nextV" value="'+esc(sk.next)+'" placeholder="e.g. chapter 4, problem 12"></div>'
+        + '<button class="btn" data-savenext="'+sk.id+'">Save</button>'
+        + '<button class="btn quiet" data-close="1">Cancel</button>';
+    }
+
+    if(kind==="editcue"){
+      return '<h3>When I do this</h3>'
+        + '<p class="hint">Write it as a situation, not an intention: <i>after dinner on weekdays, at the desk</i> '
+        + 'beats <i>practise more</i>. Tying a behaviour to a fixed cue is one of the strongest findings in the '
+        + 'behaviour-change literature.</p>'
+        + '<div class="field"><label>My cue</label>'
+        + '<input type="text" id="cueV" value="'+esc(sk.cue)+'" placeholder="After dinner on weekdays, at the desk"></div>'
+        + '<button class="btn" data-savecue="'+sk.id+'">Save</button>'
+        + '<button class="btn quiet" data-close="1">Cancel</button>';
+    }
+
+    if(kind==="addtime"){
+      return '<h3>Add time to '+esc(sk.name)+'</h3>'
+        + '<p class="hint">For the sessions you did without the stopwatch running.</p><div class="two">'
+        + '<div class="field"><label>Hours</label><input type="number" id="addH" min="0" max="24" value="1"></div>'
+        + '<div class="field"><label>Minutes</label><input type="number" id="addM" min="0" max="59" value="0"></div></div>'
+        + '<button class="btn" data-addtime="'+sk.id+'">Add to total</button>'
+        + '<button class="btn quiet" data-close="1">Cancel</button>';
+    }
+
+    if(kind==="editgoal"){
+      return '<h3>Goal for '+esc(sk.name)+'</h3>'
+        + '<p class="hint">Twenty hours is the default — enough to stop being a beginner. Raise it whenever it '
+        + 'stops being the point.</p><div class="field"><label>Hours</label>'
+        + '<input type="number" id="goalH" min="1" max="10000" value="'+sk.goal+'"></div>'
+        + '<button class="btn" data-savegoal="'+sk.id+'">Save goal</button>'
+        + '<button class="btn quiet" data-close="1">Cancel</button>';
+    }
+
+    if(kind==="topicmenu"){
+      return '<h3>'+esc(sk.name)+'</h3><div class="menu">'
+        + '<button data-sheet="parts" data-sk="'+sk.id+'">'+ic("layers")+'<span>Sub-skills</span></button>'
+        + '<button data-sheet="editcue" data-sk="'+sk.id+'">'+ic("cue")+'<span>When I do this</span></button>'
+        + '<button data-sheet="addtime" data-sk="'+sk.id+'">'+ic("plus")+'<span>Add time manually</span></button>'
+        + '<button data-sheet="editgoal" data-sk="'+sk.id+'">'+ic("target")+'<span>Change goal</span></button>'
+        + '<button data-sheet="rename" data-sk="'+sk.id+'">'+ic("pencil")+'<span>Rename skill</span></button>'
+        + '<button class="warn" data-delskill="'+sk.id+'">'+ic("trash")+'<span>Delete skill'
+        + '<span class="sub">Removes '+fmt(skillMs(sk))+' of logged time</span></span></button></div>';
+    }
+
+    if(kind==="rename"){
+      return '<h3>Rename skill</h3><div class="field"><label>Name</label>'
+        + '<input type="text" id="renameV" value="'+esc(sk.name)+'"></div>'
+        + '<button class="btn" data-rename="'+sk.id+'">Save</button>'
+        + '<button class="btn quiet" data-close="1">Cancel</button>';
+    }
+
+    if(kind==="newskill"){
+      return '<h3>New skill</h3><p class="hint">Name and goal only. Sub-skills and a cue can wait — add them '
+        + 'from the skill page whenever they become obvious.</p>'
+        + '<div class="field"><label>Name</label>'
+        + '<input type="text" id="newName" placeholder="Linear Algebra" autocomplete="off"></div>'
+        + '<div class="field"><label>Goal in hours</label>'
+        + '<input type="number" id="newGoal" value="20" min="1" max="10000"></div>'
+        + '<button class="btn" data-newskill="1">Add skill</button>'
+        + '<button class="btn quiet" data-close="1">Cancel</button>';
+    }
+
+    if(kind==="stale"){
+      var ssk = findSkill(S.active.skillId);
+      return '<h3>Still running?</h3>'
+        + '<p class="hint">This session on '+esc(ssk.name)+' started at '+clockLabel(S.active.start)
+        + ' and has been counting for '+fmt(activeMs())+'. That is long enough that it may have been left open.</p>'
+        + '<div class="menu">'
+        + '<button data-close="1">'+ic("check")+'<span>Yes, still going<span class="sub">Keep counting</span></span></button>'
+        + '<button data-sheet="setstart">'+ic("clock")+'<span>Fix the start time'
+        + '<span class="sub">Log what actually happened</span></span></button>'
+        + '<button class="warn" data-discard="1">'+ic("trash")+'<span>Throw it away'
+        + '<span class="sub">Nothing is added</span></span></button></div>';
+    }
+
+    if(kind==="settings"){
+      return '<h3>Settings</h3><p class="hint">Early prototype. Your data lives in this browser on this '
+        + 'device only — it is never sent anywhere.</p><div class="menu">'
+        + '<button data-export="1">'+ic("download")+'<span>Export data'
+        + '<span class="sub">Copies your log as JSON</span></span></button>'
+        + '<button data-demo="1">'+ic("layers")+'<span>Load example data'
+        + '<span class="sub">Three sample skills, to see how a full log looks</span></span></button>'
+        + '<button class="warn" data-clear="1">'+ic("trash")+'<span>Clear everything'
+        + '<span class="sub">Deletes every skill and session</span></span></button></div>';
+    }
+    return "";
+  }
+
+  /* ---------------- navigation ---------------- */
+  function goTo(name, id){
+    route = {name:name, id:id||null};
+    try{ history.pushState({nav:name}, ""); }catch(e){}
+    render();
+  }
+  function openTopic(id){ goTo("topic", id); }
+  function openReady(id){ goTo("ready", id); }
+  function goHome(){
+    if(pendingWrap) return;
+    var st=null; try{ st=history.state; }catch(e){}
+    if(st && st.nav){ try{ history.back(); return; }catch(e){} }
+    route = {name:"home", id:null}; render();
+  }
+  window.addEventListener("popstate", function(){
+    if(el("sheet").classList.contains("on") && !pendingWrap) closeSheet();
+    if(route.name !== "home"){ route = {name:"home", id:null}; render(); }
+  });
+
+  /* ---------------- actions ---------------- */
+  function startSession(id){
+    if(S.active){ toast("A session is already running."); return; }
+    S.active = {skillId:id, start:Date.now()};
+    save(); route = {name:"run", id:null}; render();
+  }
+
+  function stopSession(){
+    var sk = findSkill(S.active.skillId), ms = activeMs();
+    var before = hoursOf(skillMs(sk) - ms);
+    S.active = null;
+    if(ms < MS_M){ save(); route.name="home"; render(); toast("Session under a minute — not logged."); return; }
+    var sess = {id:rid(), start:Date.now()-ms, end:Date.now(), part:null, next:""};
+    sk.sessions.push(sess); save();
+    var after = hoursOf(skillMs(sk));
+    var hit = crossed(before, after);
+    var m = hit.length ? hit[hit.length-1] : null;
+    if(before < sk.goal && after >= sk.goal && hit.indexOf(sk.goal) === -1) m = sk.goal;
+    pendingWrap = {skillId:sk.id, sessionId:sess.id, ms:ms, milestone:m, pick:null};
+    route.name = "home"; render();
+    openSheet(sheetFor("wrapup"));
+  }
+
+  function afterWrap(){
+    var w = pendingWrap; pendingWrap = null; closeSheet(); render();
+    if(w && w.milestone){
+      pendingCheck = {skillId:w.skillId, milestone:w.milestone};
+      celebrate(w.milestone, findSkill(w.skillId).name, true);
+    }
+  }
+
+  function celebrate(m, name, offerCheck){
+    el("celNum").textContent = m;
+    el("celWord").textContent = m===1 ? "hour" : "hours";
+    el("celLine").textContent = celLine(m, name);
+    el("celActs").innerHTML = offerCheck
+      ? '<button class="btn" data-takestock="1">Take stock</button>'
+        + '<button class="btn quiet" data-celclose="1">Not now</button>'
+      : '<button class="btn quiet" data-celclose="1">Close</button>';
+    el("celebrate").classList.add("on");
+    bindCommon(el("celActs"));
+  }
+
+  function toast(msg){
+    var t = el("toast"); t.textContent = msg; t.classList.add("on");
+    clearTimeout(t._h); t._h = setTimeout(function(){ t.classList.remove("on"); }, 2800);
+  }
+
+  /* ---------------- binding ---------------- */
+  function bind(){
+    document.querySelectorAll("[data-start]").forEach(function(b){
+      b.onclick = function(){ startSession(b.getAttribute("data-start")); }; });
+    document.querySelectorAll("[data-ready]").forEach(function(b){
+      b.onclick = function(){ openReady(b.getAttribute("data-ready")); }; });
+    document.querySelectorAll("[data-resume]").forEach(function(b){
+      b.onclick = function(){ route={name:"run", id:null}; render(); }; });
+    document.querySelectorAll("[data-open]").forEach(function(b){
+      b.onclick = function(){ openTopic(b.getAttribute("data-open")); }; });
+    document.querySelectorAll("[data-home]").forEach(function(b){
+      b.onclick = function(){ goHome(); }; });
+    var st = document.querySelector("[data-stop]"); if(st) st.onclick = stopSession;
+    bindCommon(document);
+  }
+
+  function bindCommon(scope){
+    scope.querySelectorAll("[data-sheet]").forEach(function(b){
+      b.onclick = function(){ openSheet(sheetFor(b.getAttribute("data-sheet"), b.getAttribute("data-sk"))); }; });
+    scope.querySelectorAll("[data-close]").forEach(function(b){ b.onclick = closeSheet; });
+
+    scope.querySelectorAll("[data-pick]").forEach(function(b){
+      b.onclick = function(){
+        var on = b.classList.contains("on");
+        el("sheet").querySelectorAll(".picker button").forEach(function(x){ x.classList.remove("on"); });
+        if(!on){ b.classList.add("on"); pendingWrap.pick = b.getAttribute("data-pick"); }
+        else pendingWrap.pick = null;
+      };
+    });
+
+    var wsave = scope.querySelector("[data-wrapsave]");
+    if(wsave) wsave.onclick = function(){
+      var w = pendingWrap, sk = findSkill(w.skillId), sess = null;
+      for(var i=0;i<sk.sessions.length;i++) if(sk.sessions[i].id===w.sessionId) sess = sk.sessions[i];
+      var txt = el("wrapNext").value.trim();
+      if(sess){ sess.part = w.pick; sess.next = txt; }
+      sk.next = txt; save(); afterWrap();
+    };
+    var wskip = scope.querySelector("[data-wrapskip]");
+    if(wskip) wskip.onclick = function(){ afterWrap(); };
+
+    var cksave = scope.querySelector("[data-cksave]");
+    if(cksave) cksave.onclick = function(){
+      var c = pendingCheck, sk = findSkill(c.skillId);
+      var e = el("ckEasier").value.trim(), s = el("ckStuck").value.trim(), ch = el("ckChange").value.trim();
+      if(e || s || ch){
+        sk.reviews.push({id:rid(), at:Date.now(), milestone:c.milestone, easier:e, stuck:s, change:ch});
+        save(); toast("Checkpoint saved to "+sk.name+".");
+      }
+      pendingCheck = null; closeSheet(); render();
+    };
+
+    var takes = scope.querySelector("[data-takestock]");
+    if(takes) takes.onclick = function(){
+      el("celebrate").classList.remove("on"); openSheet(sheetFor("checkpoint"));
+    };
+    var celc = scope.querySelector("[data-celclose]");
+    if(celc) celc.onclick = function(){ el("celebrate").classList.remove("on"); pendingCheck = null; };
+
+    scope.querySelectorAll("[data-step]").forEach(function(b){
+      b.onclick = function(){
+        var v = parseInt(el("trimVal").textContent,10) + parseInt(b.getAttribute("data-step"),10);
+        var max = Math.floor(activeMs()/MS_M);
+        el("trimVal").textContent = Math.max(5, Math.min(max>5?max:5, v));
+      };
+    });
+
+    var trim = scope.querySelector("[data-trim]");
+    if(trim) trim.onclick = function(){
+      var mins = parseInt(el("trimVal").textContent,10);
+      S.active.start = Math.min(Date.now(), S.active.start + mins*MS_M);
+      save(); closeSheet(); render(); toast("Trimmed "+mins+" min. Still running.");
+    };
+
+    var ss = scope.querySelector("[data-setstart]");
+    if(ss) ss.onclick = function(){
+      var p = el("startTime").value.split(":");
+      if(p.length!==2){ toast("Pick a time first."); return; }
+      var d = new Date(); d.setHours(parseInt(p[0],10), parseInt(p[1],10), 0, 0);
+      if(d.getTime() > Date.now()) d.setDate(d.getDate()-1);
+      S.active.start = d.getTime(); save(); closeSheet(); render(); toast("Start time updated.");
+    };
+
+    var disc = scope.querySelector("[data-discard]");
+    if(disc) disc.onclick = function(){
+      S.active = null; save(); closeSheet(); route.name="home"; render(); toast("Session discarded.");
+    };
+
+    var at = scope.querySelector("[data-addtime]");
+    if(at) at.onclick = function(){
+      var sk = findSkill(at.getAttribute("data-addtime"));
+      var h = parseInt(el("addH").value,10)||0, m = parseInt(el("addM").value,10)||0;
+      var ms = h*MS_H + m*MS_M;
+      if(ms<=0){ toast("Add at least one minute."); return; }
+      var before = hoursOf(skillMs(sk)), now = Date.now();
+      sk.sessions.push({id:rid(), start:now-ms, end:now, part:null, next:"", manual:true});
+      save(); closeSheet();
+      var hit = crossed(before, hoursOf(skillMs(sk)));
+      render();
+      if(hit.length){ pendingCheck = {skillId:sk.id, milestone:hit[hit.length-1]};
+        celebrate(hit[hit.length-1], sk.name, true); }
+      else toast("Added "+fmt(ms)+" to "+sk.name+".");
+    };
+
+    var sg = scope.querySelector("[data-savegoal]");
+    if(sg) sg.onclick = function(){
+      var sk = findSkill(sg.getAttribute("data-savegoal")), g = parseInt(el("goalH").value,10);
+      if(!g || g<1){ toast("Goal must be at least 1 hour."); return; }
+      sk.goal = g; save(); closeSheet(); render(); toast("Goal set to "+g+"h.");
+    };
+
+    var sp = scope.querySelector("[data-saveparts]");
+    if(sp) sp.onclick = function(){
+      var sk = findSkill(sp.getAttribute("data-saveparts"));
+      var names = el("partsV").value.split("\n").map(function(x){ return x.trim(); })
+        .filter(function(x){ return x; }).slice(0,6);
+      var kept = [];
+      names.forEach(function(n){
+        var found = null;
+        for(var i=0;i<sk.parts.length;i++) if(sk.parts[i].name === n) found = sk.parts[i];
+        kept.push(found || {id:rid(), name:n});
+      });
+      var liveIds = kept.map(function(p){ return p.id; });
+      sk.sessions.forEach(function(s){ if(s.part && liveIds.indexOf(s.part) === -1) s.part = null; });
+      sk.parts = kept; save(); closeSheet(); render();
+      toast(kept.length ? "Sub-skills saved." : "Sub-skills cleared.");
+    };
+
+    var sn = scope.querySelector("[data-savenext]");
+    if(sn) sn.onclick = function(){
+      findSkill(sn.getAttribute("data-savenext")).next = el("nextV").value.trim();
+      save(); closeSheet(); render();
+    };
+
+    var sc = scope.querySelector("[data-savecue]");
+    if(sc) sc.onclick = function(){
+      findSkill(sc.getAttribute("data-savecue")).cue = el("cueV").value.trim();
+      save(); closeSheet(); render();
+    };
+
+    var rn = scope.querySelector("[data-rename]");
+    if(rn) rn.onclick = function(){
+      var sk = findSkill(rn.getAttribute("data-rename")), v = el("renameV").value.trim();
+      if(!v){ toast("Give it a name."); return; }
+      sk.name = v; save(); closeSheet(); render();
+    };
+
+    var ns = scope.querySelector("[data-newskill]");
+    if(ns) ns.onclick = function(){
+      var v = el("newName").value.trim();
+      if(!v){ toast("Give it a name."); return; }
+      S.skills.push({id:rid(), name:v, goal:parseInt(el("newGoal").value,10)||20,
+        created:Date.now(), parts:[], cue:"", next:"", reviews:[], sessions:[]});
+      save(); closeSheet(); render(); toast("“"+v+"” added.");
+    };
+
+    scope.querySelectorAll("[data-delskill]").forEach(function(b){
+      b.onclick = function(){
+        var id = b.getAttribute("data-delskill");
+        if(S.active && S.active.skillId===id) S.active = null;
+        S.skills = S.skills.filter(function(x){ return x.id!==id; });
+        save(); closeSheet(); route={name:"home", id:null}; render(); toast("Skill deleted.");
+      };
+    });
+
+    scope.querySelectorAll("[data-delsession]").forEach(function(b){
+      b.onclick = function(){
+        var sk = findSkill(b.getAttribute("data-sk")), sid = b.getAttribute("data-delsession");
+        sk.sessions = sk.sessions.filter(function(x){ return x.id!==sid; });
+        save(); render(); toast("Session removed.");
+      };
+    });
+
+    scope.querySelectorAll("[data-clear]").forEach(function(b){
+      b.onclick = function(){
+        S = {skills:[], active:null, seeded:false, introSeen:true};
+        save(); closeSheet(); route={name:"home", id:null}; render(); toast("Everything cleared.");
+      };
+    });
+
+    var dm = scope.querySelector("[data-demo]");
+    if(dm) dm.onclick = function(){
+      S = demo(); S.introSeen = true;
+      save(); closeSheet(); route={name:"home", id:null}; render(); toast("Example data loaded.");
+    };
+
+    var idone = scope.querySelector("[data-introdone]");
+    if(idone) idone.onclick = function(){
+      S.introSeen = true; save(); route={name:"home", id:null}; render();
+      openSheet(sheetFor("newskill"));
+    };
+    var iskip = scope.querySelector("[data-introskip]");
+    if(iskip) iskip.onclick = function(){
+      S.introSeen = true; save(); route={name:"home", id:null}; render();
+    };
+
+    var ex = scope.querySelector("[data-export]");
+    if(ex) ex.onclick = function(){
+      var text = JSON.stringify(S, null, 2);
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(function(){ toast("Copied to clipboard."); },
+          function(){ toast("Could not copy here."); });
+      } else toast("Clipboard not available here.");
+      closeSheet();
+    };
+  }
+
+  el("scrim").onclick = function(){ if(!pendingWrap) closeSheet(); };
+
+  setInterval(function(){
+    if(!S.active || el("sheet").classList.contains("on")) return;
+    if(route.name==="run" || route.name==="home") render();
+  }, 10000);
+  document.addEventListener("visibilitychange", function(){ if(!document.hidden) render(); });
+
+  render();
+  if(S.active && activeMs() > 6*MS_H) openSheet(sheetFor("stale"));
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- "20" drawn as monoline geometry: same stroke language as the app's icons,
+       same amber as its tint, and the centred dot echoes the zero of Azeret Mono. -->
+  <g fill="none" stroke="#F0A63C" stroke-width="34" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M96 184 A66 66 0 0 1 228 184 L96 400 L228 400"/>
+    <rect x="286" y="118" width="130" height="282" rx="65" ry="65"/>
+  </g>
+  <circle cx="351" cy="259" r="17" fill="#F0A63C"/>
+</svg>
